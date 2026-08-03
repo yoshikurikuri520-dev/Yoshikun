@@ -738,9 +738,51 @@ function funReply(text){
  if(cmd==='/breath'||/(休憩|深呼吸)/.test(text))return `🌿 1分休憩\n4秒で吸う → 6秒で吐く、を5回。\n肩とあごの力を抜き、最後に「次にやる一つ」だけ決めよう。`;
  return null;
 }
+
+function detectEmotion(text){
+ const t=(text||'').trim();
+ if(/(ありがとう|助かった|嬉しい|うれしい|最高|できた|成功)/.test(t))return 'happy';
+ if(/(疲れた|しんどい|つらい|悲しい|寂しい|不安|心配|落ち込)/.test(t))return 'concern';
+ if(/(すごい|本当|まじ|マジ|驚|びっくり|信じられない)/.test(t))return 'surprise';
+ if(/(ごめん|すみません|申し訳)/.test(t))return 'gentle';
+ if(/(怒|むかつ|イライラ|最悪)/.test(t))return 'calm';
+ if(/[!！]{2,}/.test(t))return 'excited';
+ return 'normal';
+}
+function emotionLine(text){
+ const emotion=detectEmotion(text),p=$('#persona').value;
+ const lines={
+  happy:['それは嬉しいな！こっちまで気分が上がったよ。','お、いいじゃん！素直にうれしいぞ。','やったな。少し誇らしい気分だ。'],
+  concern:['それは少し心配だ。無理してないか？','うん、その話は軽く流したくない。','しんどかったな。まず落ち着いて整理しよう。'],
+  surprise:['えっ、それはちょっと驚いた。','おお、予想外だな。気になる。','なるほど、それは興味を引かれる話だ。'],
+  gentle:['大丈夫。気にしすぎなくていい。','ちゃんと伝えてくれたのが嬉しいよ。','責める気はないから、安心してくれ。'],
+  calm:['それは腹が立つよな。いったん一緒に整理しよう。','うん、その気持ちは分かる。勢いで損しない方法を考えよう。','かなり嫌だったんだな。まず事実と気持ちを分けよう。'],
+  excited:['おお、テンション高いな！こっちも乗ってきた。','その勢い、嫌いじゃないぞ！','よし、面白くなってきた。'],
+  normal:['なるほど。ちょっと考えてみる。','うん、話は受け取った。','よし、頭を切り替えて答える。']
+ };
+ let line=pick(lines[emotion]||lines.normal);
+ if(p==='teacher')line=line.replace(/ぞ。?/g,'です。').replace(/な。?/g,'ですね。');
+ if(p==='maid')line='お気持ち、しっかり受け止めました。';
+ if(p==='shadow')line='感情波形を確認した。'+line;
+ if(p==='comedian'&&emotion==='normal')line='なるほど、脳内会議を始めるぞ。';
+ return line;
+}
+function emotionalReply(text,body){
+ return `${emotionLine(text)}\n\n${body}`;
+}
+function unknownOfflineReply(text){
+ const p=currentPersona();
+ return emotionalReply(text,`${p.prefix}\n今の内蔵知識だけでは自信を持って答えられない。Web検索が使える状態なら調べて答えるよ。通信できない場合は、固有名詞や条件を少し具体的にしてくれ。`);
+}
+function emotionalWebReply(query,result){
+ const p=currentPersona();
+ const intro=emotionLine(query);
+ return {answer:`${intro}\n\n${p.prefix}\n調べた内容をまとめるね。\n\n${result.answer}`,sources:result.sources||[]};
+}
+
 function offlineReply(raw){
  const text=raw.trim(),lower=text.toLowerCase(),p=currentPersona(),memory=localStorage.getItem('ygpt_memory')||'';
- const fun=funReply(text);if(fun)return `${p.prefix}\n${fun}`;
+ const fun=funReply(text);if(fun)return emotionalReply(text,`${p.prefix}\n${fun}`);
  const sass=p===personas.teacher||p===personas.maid?'':roast()+'\n';
  const calc=calcExpression(text);if(calc)return `${p.prefix}\n${sass}${calc}`;
  if(/^(こんにちは|こんばんは|おはよう|やあ|hello|hi)/i.test(text)){const h=new Date().getHours(),g=h<11?'おはようございます':h<18?'こんにちは':'こんばんは';return `${p.prefix}\n${sass}${g}！今日は何を一緒に進める？`}
@@ -750,7 +792,7 @@ function offlineReply(raw){
 ・/janken /number 100 /choice A|B /joke /story /compliment /challenge /stats
 ・/rewrite /ideas /todo /timer 5 /phrase /word /email /meeting /prompt /breath
 ・AI返信のワンタップコピー
-・会話統計とおまかせ話題\n\n本格的な最新情報検索や高度な生成AI回答には、別途APIサーバー接続が必要です。`;
+・会話統計とおまかせ話題\n\n内蔵機能で答えられない質問だけWeb検索を使用します。一般Web検索には別途APIサーバー接続が必要です。`;
  if(/(覚えて|メモリ|記憶)/.test(text))return memory?`${p.prefix}\n現在の永続メモリ：\n${memory}`:`${p.prefix}\nまだ永続メモリは空です。左メニューの「記憶を編集」から登録できます。`;
  if(/(ありがとう|助かった)/.test(text))return `${p.prefix}\nどういたしまして！次の作業も任せてください。`;
  if(/(ゲーム)/.test(text))return `${p.prefix}\nゲームの攻略、アイデア、HTML/JavaScript製ミニゲームの設計などを手伝えます。作品名や作りたい内容を入力してください。`;
@@ -780,8 +822,8 @@ function offlineReply(raw){
  if(/(名前|ネーミング|タイトル)/.test(text))return `${p.prefix}\n対象、雰囲気、入れたい言葉、避けたい言葉を入力してください。王道・親しみやすい・個性的の3方向で候補を出します。`;
 
   const fileInfo=state.file?.text?`\n\n添付ファイル「${state.file.name}」の先頭内容：\n${state.file.text.slice(0,700)}`:'';
- const memHint=memory?`\n登録メモリも参照しました：${memory.slice(0,160)}`:'';
- return `${p.prefix}\n${sass}「${text}」を受け取った。現在は完全オフラインの内蔵応答モードです。質問をもう少し具体的にすると、より適切に整理できます。${fileInfo}${memHint}`;
+ if(fileInfo)return emotionalReply(text,`${p.prefix}\n添付内容を確認したよ。\n${fileInfo}`);
+ return null;
 }
 
 function stripHtml(html){
@@ -816,19 +858,47 @@ async function onlineReply(query){
 
 function typing(){const w=document.createElement('article');w.className='message';w.id='typing';w.innerHTML=`<div class="avatar">${currentPersona().icon}</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div>`;chat.appendChild(w);chat.scrollTop=chat.scrollHeight}
 function speak(text){if(!$('#speakToggle').checked||!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=1;speechSynthesis.speak(u)}
-async function send(){const text=input.value.trim();if(!text&&!state.file)return;addMessage('user',text||'添付ファイルを確認してください',state.file);input.value='';resize();const prompt=text||'添付ファイルを確認してください';const attached=state.file;clearFile();typing();
+async function send(){
+ const text=input.value.trim();
+ if(!text&&!state.file)return;
+ addMessage('user',text||'添付ファイルを確認してください',state.file);
+ input.value='';resize();
+ const prompt=text||'添付ファイルを確認してください';
+ const attached=state.file;
+ clearFile();
+ typing();
+
  try{
+   // おふざけ、計算、挨拶、相談などの内蔵応答を最優先。
+   const localAnswer=offlineReply(prompt);
    let result;
-   if($('#webToggle').checked&&navigator.onLine)result=await onlineReply(prompt);
-   else result={answer:offlineReply(prompt),sources:[]};
+
+   if(localAnswer!==null){
+     result={answer:localAnswer,sources:[]};
+   }else if($('#webToggle').checked&&navigator.onLine){
+     const searched=await onlineReply(prompt);
+     result=emotionalWebReply(prompt,searched);
+   }else{
+     result={answer:unknownOfflineReply(prompt),sources:[]};
+   }
+
    document.querySelector('#typing')?.remove();
-   addMessage('ai',result.answer,result.sources?.length?{sources:result.sources}:attached?.text?{name:attached.name}:null);
+   addMessage(
+     'ai',
+     result.answer,
+     result.sources?.length?{sources:result.sources}:attached?.text?{name:attached.name}:null
+   );
    speak(result.answer);
  }catch(e){
    document.querySelector('#typing')?.remove();
-   const fallback=offlineReply(prompt)+`\n\n（Web検索に接続できなかったため、オフライン応答へ切り替えました）`;
-   addMessage('ai',fallback,null);speak(fallback);toast('Web検索に接続できませんでした');
- }}
+   const fallback=unknownOfflineReply(prompt)+`
+
+（Web検索に接続できなかったため、内蔵応答へ切り替えました）`;
+   addMessage('ai',fallback,null);
+   speak(fallback);
+   toast('Web検索に接続できませんでした');
+ }
+}
 function resize(){input.style.height='auto';input.style.height=Math.min(input.scrollHeight,150)+'px'}
 function clearFile(){state.file=null;fileInput.value='';$('#preview').classList.remove('show')}
 async function handleFile(file){if(!file)return;if(file.size>5*1024*1024){toast('5MB以下のファイルを選択してください');return}const data={name:file.name,type:file.type,size:file.size};if(file.type.startsWith('image/'))data.dataUrl=await readAs(file,'dataurl');else data.text=await readAs(file,'text');state.file=data;$('#previewText').textContent=`📎 ${file.name} (${Math.ceil(file.size/1024)}KB)`;$('#preview').classList.add('show');toast('ファイルを添付しました')}
