@@ -502,7 +502,10 @@ body::after{
 <label for="searchLanguage">検索言語</label>
 <select id="searchLanguage"><option value="ja" selected>日本語</option><option value="en">English</option></select>
 <label for="customSearchEndpoint">外部検索API（任意）</label>
-<input id="customSearchEndpoint" type="url" placeholder="https://example.com/api/search">
+<input id="customSearchEndpoint"
+       type="url"
+       value="/api/search"
+       placeholder="https://example.com/api/search">
 <p class="help">未設定時はDuckDuckGoの公開情報とWikipediaを組み合わせて検索します。幅広い質問へ高精度に回答するには、検索・生成機能を備えた自分の外部APIを設定してください。外部APIはPOSTで <code>{query, history}</code> を受け取り、<code>{answer, sources:[{title,url}]}</code> を返す構成にしてください。APIキーをHTMLへ直接保存せず、必ず自分のサーバー側で管理してください。</p>
 <div class="modal-actions"><button data-web-close>閉じる</button><button id="saveWebSettings">保存</button></div>
 </div></div>
@@ -662,7 +665,10 @@ function addMessage(role,text,attachment=null,save=true,ts=Date.now()){
   if(save){state.history.push({role,text,attachment:attachment?{name:attachment.name,dataUrl:attachment.dataUrl?.startsWith('data:image/')?attachment.dataUrl:null}:null,ts});persist()}
 }
 function persist(){if($('#memoryToggle').checked)localStorage.setItem('ygpt_history',JSON.stringify(state.history.slice(-100)));localStorage.setItem('ygpt_settings',JSON.stringify({persona:$('#persona').value,roast:$('#roastLevel').value,memory:$('#memoryToggle').checked,speak:$('#speakToggle').checked,avatar:$('#avatarToggle').checked,theme:state.theme,web:true,searchLanguage:$('#searchLanguage')?.value||'ja',customSearchEndpoint:$('#customSearchEndpoint')?.value.trim()||''}))}
-function restore(){try{const st=JSON.parse(localStorage.getItem('ygpt_settings')||'{}');if(st.persona)$('#persona').value=st.persona;if(st.roast)$('#roastLevel').value=st.roast;$('#memoryToggle').checked=st.memory!==false;$('#speakToggle').checked=!!st.speak;$('#avatarToggle').checked=st.avatar!==false;state.theme=st.theme||0;if($('#searchLanguage'))$('#searchLanguage').value=st.searchLanguage||'ja';if($('#customSearchEndpoint'))$('#customSearchEndpoint').value=st.customSearchEndpoint||'';const h=JSON.parse(localStorage.getItem('ygpt_history')||'[]');if(Array.isArray(h)&&h.length){state.history=h;h.forEach(x=>addMessage(x.role,x.text,x.attachment,false,x.ts))}$('#memoryText').value=localStorage.getItem('ygpt_memory')||''}catch(e){console.warn(e)}}
+function restore(){try{const st=JSON.parse(localStorage.getItem('ygpt_settings')||'{}');if(st.persona)$('#persona').value=st.persona;if(st.roast)$('#roastLevel').value=st.roast;$('#memoryToggle').checked=st.memory!==false;$('#speakToggle').checked=!!st.speak;$('#avatarToggle').checked=st.avatar!==false;state.theme=st.theme||0;if($('#searchLanguage'))$('#searchLanguage').value=st.searchLanguage||'ja';if ($('#customSearchEndpoint')) {
+  $('#customSearchEndpoint').value =
+    st.customSearchEndpoint || '/api/search';
+} h=JSON.parse(localStorage.getItem('ygpt_history')||'[]');if(Array.isArray(h)&&h.length){state.history=h;h.forEach(x=>addMessage(x.role,x.text,x.attachment,false,x.ts))}$('#memoryText').value=localStorage.getItem('ygpt_memory')||''}catch(e){console.warn(e)}}
 function calcExpression(text){const m=text.match(/(?:計算|calculate)?\s*([0-9+\-*/().%\s]{3,})/i);if(!m)return null;const exp=m[1].trim();if(!/^[0-9+\-*/().%\s]+$/.test(exp))return null;try{const val=Function('"use strict";return ('+exp+')')();return Number.isFinite(val)?`${exp} = ${val}`:null}catch{return null}}
 
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
