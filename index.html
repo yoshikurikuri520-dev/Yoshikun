@@ -450,7 +450,7 @@ body::after{
   <div class="card"><label for="roastLevel">😈 煽りレベル</label><select id="roastLevel"><option value="mild">小生意気</option><option value="spicy" selected>クソ生意気</option><option value="chaos">限界煽り</option></select></div>
   <div class="card feature"><span class="ico">🧠</span><div><strong>永続メモリ</strong><small>会話履歴を端末保存</small></div><label class="switch"><input id="memoryToggle" type="checkbox" checked><span></span></label></div>
   <div class="card feature"><span class="ico">🔊</span><div><strong>読み上げ</strong><small>AI回答を音声再生</small></div><label class="switch"><input id="speakToggle" type="checkbox"><span></span></label></div>
-  <div class="card feature"><span class="ico">🌐</span><div><strong>Web Search</strong><small id="webStatusSmall">一般Web検索＋百科事典補完</small></div><label class="switch"><input id="webToggle" type="checkbox" checked><span></span></label></div>
+  <div class="card feature"><span class="ico">🌐</span><div><strong>Web Search</strong><small id="webStatusSmall">API Web検索</small></div><label class="switch"><input id="webToggle" type="checkbox" checked><span></span></label></div>
   <div class="card feature"><span class="ico">🎭</span><div><strong>Live Avatar</strong><small>反応アニメーション</small></div><label class="switch"><input id="avatarToggle" type="checkbox" checked><span></span></label></div>
 
   <div class="card bgm-card">
@@ -486,7 +486,7 @@ body::after{
 </aside>
 <main class="main">
   <section class="chat" id="chat" aria-live="polite">
-    <div class="hero" id="hero"><div class="orb" id="orb">🤖</div><h2>COMPLETE WEB MODE 起動完了</h2><p>一般Web検索を優先し、複数の情報源を参照します。通信できない時はオフライン応答へ自動切替し、検索結果には参照リンクを表示します。</p><div class="chips"><button class="chip">できることを教えて</button><button class="chip">今日の挨拶</button><button class="chip">25×48を計算</button><button class="chip">/fortune</button><button class="chip">/boss</button><button class="chip">/janken</button><button class="chip">/joke</button><button class="chip">/story</button></div></div>
+    <div class="hero" id="hero"><div class="orb" id="orb">🤖</div><h2>COMPLETE WEB MODE 起動完了</h2><p>サーバーAPIのWeb検索を利用し、複数の情報源を参照してAI回答を生成します。APIに接続できない時はオフライン応答へ切り替えます。</p><div class="chips"><button class="chip">できることを教えて</button><button class="chip">今日の挨拶</button><button class="chip">25×48を計算</button><button class="chip">/fortune</button><button class="chip">/boss</button><button class="chip">/janken</button><button class="chip">/joke</button><button class="chip">/story</button></div></div>
   </section>
   <div class="composer-wrap"><div class="preview" id="preview"><span id="previewText"></span><button id="removeFile">✕</button></div><div class="composer"><button id="attachBtn" title="ファイル添付">📎</button><textarea id="messageInput" rows="1" placeholder="メッセージを入力…（Enterで送信 / Shift+Enterで改行）"></textarea><button id="micBtn" class="mic" title="音声入力">🎤</button><button id="sendBtn" class="send">送信</button><input id="fileInput" type="file" accept="image/*,.txt,.md,.json,.csv,.html,.css,.js" hidden></div></div>
 </main>
@@ -501,12 +501,12 @@ body::after{
 <h3>🌐 Web検索設定</h3>
 <label for="searchLanguage">検索言語</label>
 <select id="searchLanguage"><option value="ja" selected>日本語</option><option value="en">English</option></select>
-<label for="customSearchEndpoint">外部検索API（任意）</label>
+<label for="customSearchEndpoint">Web検索API</label>
 <input id="customSearchEndpoint"
        type="url"
        value="/api/search"
        placeholder="https://example.com/api/search">
-<p class="help">未設定時はDuckDuckGoの公開情報とWikipediaを組み合わせて検索します。幅広い質問へ高精度に回答するには、検索・生成機能を備えた自分の外部APIを設定してください。外部APIはPOSTで <code>{query, history}</code> を受け取り、<code>{answer, sources:[{title,url}]}</code> を返す構成にしてください。APIキーをHTMLへ直接保存せず、必ず自分のサーバー側で管理してください。</p>
+<p class="help">同じドメインの <code>/api/search</code> を使用します。APIはPOSTで <code>{query, history, language}</code> を受け取り、<code>{answer, sources:[{title,url}]}</code> を返してください。APIキーはHTMLへ書かず、サーバー側の環境変数で管理してください。</p>
 <div class="modal-actions"><button data-web-close>閉じる</button><button id="saveWebSettings">保存</button></div>
 </div></div>
 
@@ -668,7 +668,7 @@ function persist(){if($('#memoryToggle').checked)localStorage.setItem('ygpt_hist
 function restore(){try{const st=JSON.parse(localStorage.getItem('ygpt_settings')||'{}');if(st.persona)$('#persona').value=st.persona;if(st.roast)$('#roastLevel').value=st.roast;$('#memoryToggle').checked=st.memory!==false;$('#speakToggle').checked=!!st.speak;$('#avatarToggle').checked=st.avatar!==false;state.theme=st.theme||0;if($('#searchLanguage'))$('#searchLanguage').value=st.searchLanguage||'ja';if ($('#customSearchEndpoint')) {
   $('#customSearchEndpoint').value =
     st.customSearchEndpoint || '/api/search';
-} h=JSON.parse(localStorage.getItem('ygpt_history')||'[]');if(Array.isArray(h)&&h.length){state.history=h;h.forEach(x=>addMessage(x.role,x.text,x.attachment,false,x.ts))}$('#memoryText').value=localStorage.getItem('ygpt_memory')||''}catch(e){console.warn(e)}}
+} const h=JSON.parse(localStorage.getItem('ygpt_history')||'[]');if(Array.isArray(h)&&h.length){state.history=h;h.forEach(x=>addMessage(x.role,x.text,x.attachment,false,x.ts))}$('#memoryText').value=localStorage.getItem('ygpt_memory')||''}catch(e){console.warn(e)}}
 function calcExpression(text){const m=text.match(/(?:計算|calculate)?\s*([0-9+\-*/().%\s]{3,})/i);if(!m)return null;const exp=m[1].trim();if(!/^[0-9+\-*/().%\s]+$/.test(exp))return null;try{const val=Function('"use strict";return ('+exp+')')();return Number.isFinite(val)?`${exp} = ${val}`:null}catch{return null}}
 
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
@@ -836,19 +836,40 @@ function stripHtml(html){
  const d=document.createElement('div');d.innerHTML=html;return (d.textContent||'').replace(/\s+/g,' ').trim();
 }
 async function customWebSearch(query){
- const endpoint=($('#customSearchEndpoint')?.value||'').trim();
- if(!endpoint)return null;
- const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,history:state.history.slice(-8)})});
- if(!r.ok)throw new Error(`外部検索APIエラー (${r.status})`);
- const data=await r.json();
- if(!data?.answer)throw new Error('外部検索APIの応答形式が不正です');
- return {answer:String(data.answer),sources:Array.isArray(data.sources)?data.sources:[]};
+  const endpoint=(($('#customSearchEndpoint')?.value||'/api/search').trim()||'/api/search');
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),30000);
+  try{
+    const r=await fetch(endpoint,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        query,
+        history:state.history.slice(-8),
+        language:$('#searchLanguage')?.value||'ja'
+      }),
+      signal:controller.signal
+    });
+    let data=null;
+    try{data=await r.json()}catch(_){}
+    if(!r.ok)throw new Error(data?.error||`Web検索APIエラー (${r.status})`);
+    if(!data?.answer)throw new Error('Web検索APIの応答形式が不正です');
+    return {
+      answer:String(data.answer),
+      sources:Array.isArray(data.sources)?data.sources:[]
+    };
+  }catch(e){
+    if(e?.name==='AbortError')throw new Error('Web検索APIがタイムアウトしました');
+    throw e;
+  }finally{
+    clearTimeout(timeout);
+  }
 }
 async function duckDuckGoSearch(query){
  const lang=$('#searchLanguage')?.value||'ja';
  const api=`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&no_redirect=1&skip_disambig=0&kl=${lang==='ja'?'jp-jp':'us-en'}`;
  const r=await fetch(api,{headers:{Accept:'application/json'}});
- if(!r.ok)throw new Error('一般Web検索に接続できません');
+ if(!r.ok)throw new Error('Web検索APIに接続できません');
  const data=await r.json();
  const items=[];
  if(data.AbstractText)items.push({title:data.Heading||query,text:data.AbstractText,url:data.AbstractURL});
@@ -870,7 +891,7 @@ async function wikipediaSearch(query){
  const lang=$('#searchLanguage')?.value||'ja';
  const api=`https://${lang}.wikipedia.org/w/api.php?origin=*&action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5&prop=extracts|info&exintro=1&explaintext=1&inprop=url&format=json`;
  const r=await fetch(api,{headers:{Accept:'application/json'}});
- if(!r.ok)throw new Error('百科事典検索に接続できません');
+ if(!r.ok)throw new Error('Web検索APIに接続できません');
  const data=await r.json(),pages=Object.values(data?.query?.pages||{}).sort((a,b)=>(a.index||99)-(b.index||99));
  if(!pages.length)return null;
  const summaries=pages.slice(0,3).map((x,i)=>`${i+1}. ${x.title}\n${(x.extract||'概要なし').slice(0,520)}`);
@@ -890,13 +911,7 @@ function mergeSearchResults(query,results){
  };
 }
 async function onlineReply(query){
- try{
-   const custom=await customWebSearch(query);
-   if(custom)return custom;
- }catch(e){toast(e.message+'。公開Web検索へ切替えます')}
- const settled=await Promise.allSettled([duckDuckGoSearch(query),wikipediaSearch(query)]);
- const results=settled.filter(x=>x.status==='fulfilled').map(x=>x.value);
- return mergeSearchResults(query,results);
+  return await customWebSearch(query);
 }
 
 function typing(){const w=document.createElement('article');w.className='message';w.id='typing';w.innerHTML=`<div class="avatar">${currentPersona().icon}</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div>`;chat.appendChild(w);chat.scrollTop=chat.scrollHeight}
@@ -956,7 +971,7 @@ document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{input.value=b.textC
 document.querySelectorAll('[data-fun]').forEach(b=>b.onclick=()=>{input.value=b.dataset.fun;send();});
 ['persona','roastLevel','memoryToggle','speakToggle','avatarToggle'].forEach(id=>$('#'+id).addEventListener('change',()=>{persist();if(id==='persona'){toast('AI人格を変更しました');$('#orb')&&($('#orb').textContent=currentPersona().icon)}}));
 $('#webToggle').onchange=e=>{if(!e.target.checked){toast('Web検索をOFFにしました。再読み込み時はONに戻ります')}else toast('Web検索をONにしました');persist();updateOnlineStatus()};
-function updateOnlineStatus(){const online=navigator.onLine;$('#statusText').textContent=online&&$('#webToggle').checked?'Web検索モード':'オフライン応答';$('#webStatusSmall').textContent=online?'一般Web検索＋百科事典補完':'通信待機中';}
+function updateOnlineStatus(){const online=navigator.onLine;$('#statusText').textContent=online&&$('#webToggle').checked?'Web検索モード':'オフライン応答';$('#webStatusSmall').textContent=online?'API Web検索':'通信待機中';}
 window.addEventListener('online',updateOnlineStatus);window.addEventListener('offline',updateOnlineStatus);
 $('#webSettingsBtn').onclick=()=>$('#webSettingsModal').classList.add('show');
 document.querySelectorAll('[data-web-close]').forEach(b=>b.onclick=()=>$('#webSettingsModal').classList.remove('show'));
