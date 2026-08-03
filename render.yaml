@@ -16,5 +16,5 @@ services:
         value: gpt-5-mini
       - key: RATE_LIMIT_PER_MINUTE
         value: 30
-      - key: ALLOWED_ORIGINS
+      - key: https://yoshikurikuri520-dev.github.io/Yoshikun/ 
         value: same-origin
