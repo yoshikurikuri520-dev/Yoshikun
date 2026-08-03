@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#070b1c">
-<title>YoshikunGPT DX Edition</title>
+<title>YoshikunGPT Complete Web Edition</title>
 <style>
 :root{
   --bg:#050816;--panel:#0d1429;--panel2:#131d38;--line:#25355f;--text:#f7fbff;
@@ -450,7 +450,7 @@ body::after{
   <div class="card"><label for="roastLevel">😈 煽りレベル</label><select id="roastLevel"><option value="mild">小生意気</option><option value="spicy" selected>クソ生意気</option><option value="chaos">限界煽り</option></select></div>
   <div class="card feature"><span class="ico">🧠</span><div><strong>永続メモリ</strong><small>会話履歴を端末保存</small></div><label class="switch"><input id="memoryToggle" type="checkbox" checked><span></span></label></div>
   <div class="card feature"><span class="ico">🔊</span><div><strong>読み上げ</strong><small>AI回答を音声再生</small></div><label class="switch"><input id="speakToggle" type="checkbox"><span></span></label></div>
-  <div class="card feature"><span class="ico">🌐</span><div><strong>Web Search</strong><small id="webStatusSmall">常時ON・Wikipedia検索</small></div><label class="switch"><input id="webToggle" type="checkbox" checked><span></span></label></div>
+  <div class="card feature"><span class="ico">🌐</span><div><strong>Web Search</strong><small id="webStatusSmall">一般Web検索＋百科事典補完</small></div><label class="switch"><input id="webToggle" type="checkbox" checked><span></span></label></div>
   <div class="card feature"><span class="ico">🎭</span><div><strong>Live Avatar</strong><small>反応アニメーション</small></div><label class="switch"><input id="avatarToggle" type="checkbox" checked><span></span></label></div>
 
   <div class="card bgm-card">
@@ -486,7 +486,7 @@ body::after{
 </aside>
 <main class="main">
   <section class="chat" id="chat" aria-live="polite">
-    <div class="hero" id="hero"><div class="orb" id="orb">🤖</div><h2>COMPLETE WEB MODE 起動完了</h2><p>Web検索を優先し、通信できない時はオフライン応答へ自動切替する完全版です。検索結果には参照リンクを表示します。</p><div class="chips"><button class="chip">できることを教えて</button><button class="chip">今日の挨拶</button><button class="chip">25×48を計算</button><button class="chip">/fortune</button><button class="chip">/boss</button><button class="chip">/janken</button><button class="chip">/joke</button><button class="chip">/story</button></div></div>
+    <div class="hero" id="hero"><div class="orb" id="orb">🤖</div><h2>COMPLETE WEB MODE 起動完了</h2><p>一般Web検索を優先し、複数の情報源を参照します。通信できない時はオフライン応答へ自動切替し、検索結果には参照リンクを表示します。</p><div class="chips"><button class="chip">できることを教えて</button><button class="chip">今日の挨拶</button><button class="chip">25×48を計算</button><button class="chip">/fortune</button><button class="chip">/boss</button><button class="chip">/janken</button><button class="chip">/joke</button><button class="chip">/story</button></div></div>
   </section>
   <div class="composer-wrap"><div class="preview" id="preview"><span id="previewText"></span><button id="removeFile">✕</button></div><div class="composer"><button id="attachBtn" title="ファイル添付">📎</button><textarea id="messageInput" rows="1" placeholder="メッセージを入力…（Enterで送信 / Shift+Enterで改行）"></textarea><button id="micBtn" class="mic" title="音声入力">🎤</button><button id="sendBtn" class="send">送信</button><input id="fileInput" type="file" accept="image/*,.txt,.md,.json,.csv,.html,.css,.js" hidden></div></div>
 </main>
@@ -503,7 +503,7 @@ body::after{
 <select id="searchLanguage"><option value="ja" selected>日本語</option><option value="en">English</option></select>
 <label for="customSearchEndpoint">外部検索API（任意）</label>
 <input id="customSearchEndpoint" type="url" placeholder="https://example.com/api/search">
-<p class="help">未設定でもWikipedia検索が動作します。外部APIを設定する場合は、POSTで <code>{query, history}</code> を受け取り、<code>{answer, sources:[{title,url}]}</code> を返す構成にしてください。APIキーをHTMLへ直接保存せず、必ず自分のサーバー側で管理してください。</p>
+<p class="help">未設定時はDuckDuckGoの公開情報とWikipediaを組み合わせて検索します。幅広い質問へ高精度に回答するには、検索・生成機能を備えた自分の外部APIを設定してください。外部APIはPOSTで <code>{query, history}</code> を受け取り、<code>{answer, sources:[{title,url}]}</code> を返す構成にしてください。APIキーをHTMLへ直接保存せず、必ず自分のサーバー側で管理してください。</p>
 <div class="modal-actions"><button data-web-close>閉じる</button><button id="saveWebSettings">保存</button></div>
 </div></div>
 
@@ -518,7 +518,7 @@ const bgmTracks=[
   {title:'Endless Story',file:'endless_story.m4a',local:'audio/endless_story.m4a'},
   {title:'糸',file:'ito.m4a',local:'audio/ito.m4a'},
   {title:'長い間',file:'nagaiaida.m4a',local:'audio/nagaiaida.m4a'},
-  {title:'CAN YOU CELEBRATE',file:'canyoucelebrate.m4a',local:'audio/canyoucelebrate.m4a'},
+  {title:'CAN YOU CELEBRATE',file:'can　you  celebrate.m4a',local:'audio/can　you  celebrate.m4a'},
   {title:'タッチ',file:'tacchi.m4a',local:'audio/tacchi.m4a'},
   {title:'もっと強く抱きしめたら',file:'mottotuyokudakishimetara.mp3',local:'audio/mottotuyokudakishimetara.mp3'},
   {title:'God knows... ',file:'god knows... .mp3',local:'audio/god knows... .mp3'},
@@ -838,22 +838,59 @@ async function customWebSearch(query){
  if(!data?.answer)throw new Error('外部検索APIの応答形式が不正です');
  return {answer:String(data.answer),sources:Array.isArray(data.sources)?data.sources:[]};
 }
+async function duckDuckGoSearch(query){
+ const lang=$('#searchLanguage')?.value||'ja';
+ const api=`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&no_redirect=1&skip_disambig=0&kl=${lang==='ja'?'jp-jp':'us-en'}`;
+ const r=await fetch(api,{headers:{Accept:'application/json'}});
+ if(!r.ok)throw new Error('一般Web検索に接続できません');
+ const data=await r.json();
+ const items=[];
+ if(data.AbstractText)items.push({title:data.Heading||query,text:data.AbstractText,url:data.AbstractURL});
+ const walk=list=>{
+   (list||[]).forEach(x=>{
+     if(x.Topics)return walk(x.Topics);
+     if(x.Text&&x.FirstURL)items.push({title:x.Text.split(' - ')[0].slice(0,90),text:x.Text,url:x.FirstURL});
+   });
+ };
+ walk(data.RelatedTopics);
+ const unique=items.filter((x,i,a)=>x.url&&a.findIndex(y=>y.url===x.url)===i).slice(0,5);
+ if(!unique.length)return null;
+ return {
+   answer:`🌐 一般Web検索の要点\n\n${unique.slice(0,3).map((x,i)=>`${i+1}. ${x.title}\n${x.text.slice(0,520)}`).join('\n\n')}`,
+   sources:unique.map(x=>({title:x.title,url:x.url}))
+ };
+}
 async function wikipediaSearch(query){
  const lang=$('#searchLanguage')?.value||'ja';
  const api=`https://${lang}.wikipedia.org/w/api.php?origin=*&action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5&prop=extracts|info&exintro=1&explaintext=1&inprop=url&format=json`;
  const r=await fetch(api,{headers:{Accept:'application/json'}});
- if(!r.ok)throw new Error('Wikipedia検索に接続できません');
+ if(!r.ok)throw new Error('百科事典検索に接続できません');
  const data=await r.json(),pages=Object.values(data?.query?.pages||{}).sort((a,b)=>(a.index||99)-(b.index||99));
- if(!pages.length)return {answer:`「${query}」に一致するWeb情報が見つかりませんでした。検索語を具体的にしてください。`,sources:[]};
+ if(!pages.length)return null;
  const summaries=pages.slice(0,3).map((x,i)=>`${i+1}. ${x.title}\n${(x.extract||'概要なし').slice(0,520)}`);
- return {answer:`🌐 Web検索結果（Wikipedia）\n\n${summaries.join('\n\n')}\n\n情報は更新される場合があります。重要な内容は参照ページで確認してください。`,sources:pages.slice(0,5).map(x=>({title:x.title,url:x.fullurl||`https://${lang}.wikipedia.org/?curid=${x.pageid}`}))};
+ return {answer:`📚 百科事典による補完\n\n${summaries.join('\n\n')}`,sources:pages.slice(0,5).map(x=>({title:x.title,url:x.fullurl||`https://${lang}.wikipedia.org/?curid=${x.pageid}`}))};
+}
+function mergeSearchResults(query,results){
+ const valid=results.filter(Boolean);
+ if(!valid.length)return {
+   answer:`「${query}」に関する十分な情報を取得できませんでした。検索語を具体的にするか、検索設定で外部検索APIを登録してください。`,
+   sources:[]
+ };
+ const sources=[];
+ valid.forEach(r=>(r.sources||[]).forEach(s=>{if(s?.url&&!sources.some(x=>x.url===s.url))sources.push(s)}));
+ return {
+   answer:valid.map(r=>r.answer).join('\n\n---\n\n')+'\n\n※公開APIだけでは検索範囲や最新性に限界があります。重要な内容は参照先で確認してください。',
+   sources:sources.slice(0,8)
+ };
 }
 async function onlineReply(query){
  try{
    const custom=await customWebSearch(query);
    if(custom)return custom;
- }catch(e){toast(e.message+'。Wikipediaへ切替えます')}
- return wikipediaSearch(query);
+ }catch(e){toast(e.message+'。公開Web検索へ切替えます')}
+ const settled=await Promise.allSettled([duckDuckGoSearch(query),wikipediaSearch(query)]);
+ const results=settled.filter(x=>x.status==='fulfilled').map(x=>x.value);
+ return mergeSearchResults(query,results);
 }
 
 function typing(){const w=document.createElement('article');w.className='message';w.id='typing';w.innerHTML=`<div class="avatar">${currentPersona().icon}</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div>`;chat.appendChild(w);chat.scrollTop=chat.scrollHeight}
@@ -913,7 +950,7 @@ document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{input.value=b.textC
 document.querySelectorAll('[data-fun]').forEach(b=>b.onclick=()=>{input.value=b.dataset.fun;send();});
 ['persona','roastLevel','memoryToggle','speakToggle','avatarToggle'].forEach(id=>$('#'+id).addEventListener('change',()=>{persist();if(id==='persona'){toast('AI人格を変更しました');$('#orb')&&($('#orb').textContent=currentPersona().icon)}}));
 $('#webToggle').onchange=e=>{if(!e.target.checked){toast('Web検索をOFFにしました。再読み込み時はONに戻ります')}else toast('Web検索をONにしました');persist();updateOnlineStatus()};
-function updateOnlineStatus(){const online=navigator.onLine;$('#statusText').textContent=online&&$('#webToggle').checked?'Web検索モード':'オフライン応答';$('#webStatusSmall').textContent=online?'常時ON・Wikipedia検索':'通信待機中';}
+function updateOnlineStatus(){const online=navigator.onLine;$('#statusText').textContent=online&&$('#webToggle').checked?'Web検索モード':'オフライン応答';$('#webStatusSmall').textContent=online?'一般Web検索＋百科事典補完':'通信待機中';}
 window.addEventListener('online',updateOnlineStatus);window.addEventListener('offline',updateOnlineStatus);
 $('#webSettingsBtn').onclick=()=>$('#webSettingsModal').classList.add('show');
 document.querySelectorAll('[data-web-close]').forEach(b=>b.onclick=()=>$('#webSettingsModal').classList.remove('show'));
